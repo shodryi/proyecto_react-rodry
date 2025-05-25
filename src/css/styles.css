@@ -1,0 +1,117 @@
+/* 1. Reset / Normalize básico */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 2. Variables CSS (colores, espacios, tipografías) */
+:root {
+  --color-primary:   #0D47A1;
+  --color-secondary: #1976D2;
+  --color-bg:        #F5F5F5;
+  --color-text:      #333333;
+  --spacing-sm:      0.5rem;
+  --spacing-md:      1rem;
+  --spacing-lg:      2rem;
+  --font-sans:       'Helvetica Neue', Arial, sans-serif;
+}
+
+/* 3. Body y tipografía base */
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* 4. Encabezados */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+/* 5. Enlaces */
+a {
+  color: var(--color-secondary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* 6. Contenedores responsivos */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
+}
+
+/* 7. Listas sin estilo por defecto */
+ul, ol {
+  list-style: none;
+}
+
+/* 8. Botones base */
+button {
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Boton de login */
+.btn-login {
+  background-color: #4CAF50!important;
+  border-color: #4CAF50!important;
+  color: white!important;
+  transition: background-color 0.3s ease, border-color 0.3s ease!important;
+}
+
+.btn-login:hover {
+  background-color: #3E8E41!important;
+  border-color: #3E8E41!important;
+}
+
+/* Boton de agregar al carrito */
+.btn-agregar {
+  background-color: #378039!important;
+  border: none!important;
+  transition: background-color 0.3s ease!important;
+}
+
+.btn-agregar:hover {
+  background-color: #2d6b2e!important; /* Un tono más oscuro */
+}
+
+/*Efecto de las cards de mobs*/
+.mob-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.mob-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+}
+
+
+/* 9. Imágenes responsivas */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* 10. Utilidades rápidas */
+.mt-1 { margin-top: var(--spacing-sm); }
+.mt-2 { margin-top: var(--spacing-md); }
+.mb-2 { margin-bottom: var(--spacing-md); }
+.p-2  { padding: var(--spacing-md); }
+.text-center { text-align: center; }
