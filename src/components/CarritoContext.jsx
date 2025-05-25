@@ -1,11 +1,10 @@
 import React, { createContext, useState, useContext } from 'react';
 
-// 1) Crea el contexto
+// 1) Creo el contexto
 const CartContext = createContext();
 
 // 2) Proveedor
 export function CartProvider({ children }) {
-  // usamos un objeto { [mobId]: cantidad }
   const [cart, setCart] = useState({});
 
   // función para agregar 1 unidad de un mob

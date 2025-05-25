@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Spinner, Alert, Button } from 'react-bootstrap';
 import { useCart } from '../components/CarritoContext';
 
-// import local images
+// Importar imagenes locales que no estan disponibles en la API
 import breezeImg from '../assets/mobs/breeze.webp';
 import creeperImg from '../assets/mobs/creeper.webp';
 import donkeyImg from '../assets/mobs/donkey.webp';
@@ -24,13 +24,13 @@ import witchImg from '../assets/mobs/witch.webp';
 import zoglinImg from '../assets/mobs/zoglin.webp';
 import zombie_villagerImg from '../assets/mobs/zombie_villager.webp';
 
-// Helper to normalize mob identifiers
+// Normalizar ID's
 function normalizeId(id) {
   if (!id) return '';
   return id.toLowerCase().split(':').pop().replace(/[-\s]/g, '_');
 }
 
-// Map for local images
+// Map para imagenes locales
 const localMobImages = {
   breeze: breezeImg,
   creeper: creeperImg,

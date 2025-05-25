@@ -24,7 +24,7 @@ import witchImg from '../assets/mobs/witch.webp';
 import zoglinImg from '../assets/mobs/zoglin.webp';
 import zombie_villagerImg from '../assets/mobs/zombie_villager.webp';
 
-// Helper to normalize mob identifiers
+// Normalizar ID's
 function normalizeId(id) {
   if (!id) return '';
 
@@ -136,15 +136,12 @@ export default function Mobs() {
                 <Card.Body>
                     <Card.Title>{mob.name}</Card.Title>
 
-                    {/* FLEX ROW: texto a la izquierda + icono a la derecha */}
                     <div className="d-flex justify-content-between align-items-start mb-3">
-                      {/* Texto apilado */}
                       <div>
                         <div><strong>Vida:</strong> {mob.health}</div>
                         <div><strong>Dimensiones:</strong> {mob.width}×{mob.height}</div>
                       </div>
 
-                      {/* Botón solo con el SVG, tamaño sm y padding reducido */}
                       <Button variant="success"size="sm"className="p-1"style={{ minWidth: 'auto'}}>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -163,14 +160,13 @@ export default function Mobs() {
                       </Button>
                     </div>
 
-                    {/* Si todavía quieres un botón “Agregar al carrito” grande debajo */}
                     <Button
                       variant="success"
                       className="w-100"
                       onClick={() => {
                         addToCart(mob.identifier);
 
-                        // 2. Muestra el SweetAlert
+                        // Muestro el SweetAlert
                         swal({
                           title: '¡Hecho!',
                           text: `${mob.name} añadido al carrito correctamente.`,

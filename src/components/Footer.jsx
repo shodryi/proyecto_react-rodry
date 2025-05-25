@@ -9,10 +9,10 @@ export default function Footer() {
   const handleInicioClick = e => {
     e.preventDefault();
     if (location.pathname === '/' || location.pathname === '/mobs') {
-      // Si ya estás en la página principal, solo haces scroll al top
+      // Si estoy en la página principal,hago scroll al top
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      // Si estás en otra ruta, navegas a la principal
+      // Si estoy en otra ruta, navega a la principal
       navigate('/');
     }
   };

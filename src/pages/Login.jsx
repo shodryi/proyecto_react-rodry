@@ -8,7 +8,7 @@ export default function Login() {
   const handleLogin = (e) => {
     e.preventDefault();
     localStorage.setItem('auth', 'true');
-    navigate('/perfil/usuario123');
+    navigate('/perfil/admin');
   };
 
   return (

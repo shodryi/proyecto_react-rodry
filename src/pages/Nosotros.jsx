@@ -55,7 +55,7 @@ export default function Nosotros() {
         </Col>
       </Row>
 
-      {/* Valores (Accordion) */}
+      {/* Valores */}
       <Row className="mb-4">
         <Col>
           <h2 className="mb-3 text-light">Nuestros Valores</h2>
