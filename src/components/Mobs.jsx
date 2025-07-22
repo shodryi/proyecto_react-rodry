@@ -63,11 +63,12 @@ export default function Mobs() {
   const [selectedMob, setSelectedMob] = useState(null);
   const MOBS_PER_PAGE = 16;
   const { addToCart } = useCart();
+  const base = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     async function fetchMobs() {
       try {
-        const res = await fetch('/api/mobs');
+        const res = await fetch(`${base}/mobsearch`);
         if (!res.ok) throw new Error('Error al solicitar la lista de mobs');
         const json = await res.json();
         const all = json.data || json;

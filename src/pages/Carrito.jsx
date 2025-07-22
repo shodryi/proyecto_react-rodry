@@ -22,6 +22,8 @@ export default function Carrito() {
   const [mobToRemoveId, setMobToRemoveId] = useState(null);
   const [mobToRemoveName, setMobToRemoveName] = useState('');
 
+  const base = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     if (entries.length === 0) {
       setItems([]);
@@ -32,7 +34,7 @@ export default function Carrito() {
 
     Promise.all(
       entries.map(([mobId, qty]) =>
-        fetch(`/api/mobs/${mobId}`)
+        fetch(`${base}/mobsearch/${mobId}`)
           .then(res => {
             if (!res.ok) throw new Error(`No encontrado: ${mobId}`);
             return res.json();

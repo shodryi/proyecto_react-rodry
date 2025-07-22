@@ -11,13 +11,15 @@ export default function MobAdmin() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', health: '', width: '', height: '' });
 
+  const base = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     fetchList();
   }, []);
 
   function fetchList() {
     setLoading(true);
-    fetch('/api/mobs')
+    fetch(`${base}/mobsearch`)
       .then(r => r.json())
       .then(j => setMobs(j.data || j))
       .catch(() => setError('Error al cargar'))
@@ -64,7 +66,7 @@ export default function MobAdmin() {
 
   function handleDelete() {
     if (!mobToDelete) return;
-    fetch(`/api/mobs/${mobToDelete.id}`, { method: 'DELETE' })
+    fetch(`${base}/mobsearch/${mobToDelete.id}`, { method: 'DELETE' })
       .then(() => {
         setShowDeleteModal(false);
         setMobToDelete(null);
