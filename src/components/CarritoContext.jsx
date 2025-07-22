@@ -15,13 +15,30 @@ export function CartProvider({ children }) {
     }));
   }
 
+  // actualizar cantidad
+  function updateQty(mobId, qty) {
+    if (qty <= 0) {
+      // eliminar del carrito si qty 0 o menor
+      setCart(prev => {
+        const copy = { ...prev };
+        delete copy[mobId];
+        return copy;
+      });
+    } else {
+      setCart(prev => ({
+        ...prev,
+        [mobId]: qty
+      }));
+    }
+  }
+
   // limpiar el carrito
   function clearCart() {
     setCart({});
   }
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, clearCart }}>
+    <CartContext.Provider value={{ cart, addToCart, updateQty, clearCart }}>
       {children}
     </CartContext.Provider>
   );

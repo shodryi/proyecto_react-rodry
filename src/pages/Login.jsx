@@ -1,12 +1,24 @@
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, FormGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import logo from '../assets/img/logo-minecraft.svg';
 
 export default function Login() {
   const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleLogin = (e) => {
     e.preventDefault();
+    // Validar que no estén vacíos
+    if (!username.trim() || !password.trim()) {
+      setError('Por favor completa ambos campos.');
+      return;
+    }
+    // Limpio posible error
+    setError('');
+    // En entorno de prueba, cualquier credencial válida
     localStorage.setItem('auth', 'true');
     navigate('/perfil/admin');
   };
@@ -23,15 +35,30 @@ export default function Login() {
             />
             <Card.Body>
               <Card.Title className="text-center mb-3">Iniciar sesión</Card.Title>
-              <Form onSubmit={handleLogin}>
+
+              {error && <Alert variant="danger">{error}</Alert>}
+
+              <Form onSubmit={handleLogin} noValidate>
                 <Form.Group className="mb-3" controlId="formUser">
                   <Form.Label>Usuario</Form.Label>
-                  <Form.Control type="text" placeholder="Ingresa tu usuario" required />
+                  <Form.Control
+                    type="text"
+                    name="username"
+                    placeholder="Ingresa tu usuario"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                  />
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formPassword">
                   <Form.Label>Contraseña</Form.Label>
-                  <Form.Control type="password" placeholder="Ingresa tu contraseña" required />
+                  <Form.Control
+                    type="password"
+                    name="password"
+                    placeholder="Ingresa tu contraseña"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                  />
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formRemember">
@@ -42,6 +69,7 @@ export default function Login() {
                   Entrar
                 </Button>
               </Form>
+
               <div className="text-center mt-3">
                 <a href="#" className="text-decoration-none">
                   ¿Olvidaste tu contraseña?

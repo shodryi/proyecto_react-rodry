@@ -1,65 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Spinner, Alert, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Alert, Button, InputGroup, FormControl, Modal } from 'react-bootstrap';
 import { useCart } from '../components/CarritoContext';
 
-// Importar imagenes locales que no estan disponibles en la API
-import breezeImg from '../assets/mobs/breeze.webp';
-import creeperImg from '../assets/mobs/creeper.webp';
-import donkeyImg from '../assets/mobs/donkey.webp';
-import elder_guardianImg from '../assets/mobs/elder_guardian.webp';
-import endermanImg from '../assets/mobs/enderman.webp';
-import foxImg from '../assets/mobs/fox.webp';
-import guardianImg from '../assets/mobs/guardian.webp';
-import magma_cubeImg from '../assets/mobs/magma_cube.png';
-import muleImg from '../assets/mobs/mule.webp';
-import ocelotImg from '../assets/mobs/ocelot.webp';
-import pigImg from '../assets/mobs/pig.png';
-import piglin_bruteImg from '../assets/mobs/piglin_brute.png';
-import polar_bearImg from '../assets/mobs/polar_bear.png';
-import shulkerImg from '../assets/mobs/shulker.png';
-import snow_golemImg from '../assets/mobs/snow_golem.png';
-import turtleImg from '../assets/mobs/turtle.webp';
-import villagerImg from '../assets/mobs/villager.webp';
-import witchImg from '../assets/mobs/witch.webp';
-import zoglinImg from '../assets/mobs/zoglin.webp';
-import zombie_villagerImg from '../assets/mobs/zombie_villager.webp';
-
-// Normalizar ID's
 function normalizeId(id) {
   if (!id) return '';
   return id.toLowerCase().split(':').pop().replace(/[-\s]/g, '_');
 }
 
-// Map para imagenes locales
 const localMobImages = {
-  breeze: breezeImg,
-  creeper: creeperImg,
-  donkey: donkeyImg,
-  elder_guardian: elder_guardianImg,
-  enderman: endermanImg,
-  fox: foxImg,
-  guardian: guardianImg,
-  magma_cube: magma_cubeImg,
-  mule: muleImg,
-  ocelot: ocelotImg,
-  pig: pigImg,
-  piglin_brute: piglin_bruteImg,
-  polar_bear: polar_bearImg,
-  shulker: shulkerImg,
-  snow_golem: snow_golemImg,
-  turtle: turtleImg,
-  villager: villagerImg,
-  witch: witchImg,
-  zoglin: zoglinImg,
-  zombie_villager: zombie_villagerImg
+  // ... igual que antes
 };
 
 export default function Carrito() {
-  const { cart, clearCart } = useCart();
-  const entries = Object.entries(cart); // [ [mobId, qty], ... ]
+  const { cart, clearCart, updateQty } = useCart();  // <-- Usa updateQty, no setCart
+  const entries = Object.entries(cart);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [mobToRemoveId, setMobToRemoveId] = useState(null);
+  const [mobToRemoveName, setMobToRemoveName] = useState('');
 
   useEffect(() => {
     if (entries.length === 0) {
@@ -71,32 +32,78 @@ export default function Carrito() {
 
     Promise.all(
       entries.map(([mobId, qty]) =>
-        fetch(`/api/mob/${mobId}`)
+        fetch(`/api/mobs/${mobId}`)
           .then(res => {
             if (!res.ok) throw new Error(`No encontrado: ${mobId}`);
             return res.json();
           })
-          .then(json => ({ data: json.data, qty }))
+          .then(json => {
+            const mob = json.data || json;
+            return { mob, qty };
+          })
       )
     )
       .then(results => {
-        setItems(results);
+        setItems(results.filter(r => r.mob));
       })
       .catch(err => {
         console.error(err);
         setError('Error al cargar los mobs.');
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+      });
   }, [cart]);
+
+  // Actualiza cantidad con la función del contexto updateQty
+  function handleUpdateQty(mobId, newQty) {
+    updateQty(mobId, newQty);
+    // Actualiza localmente la lista para reflejar rápido el cambio
+    if (newQty < 1) {
+      setItems(prev => prev.filter(item => (item.mob.id || item.mob.identifier) !== mobId));
+    } else {
+      setItems(prev =>
+        prev.map(item =>
+          (item.mob.id || item.mob.identifier) === mobId
+            ? { ...item, qty: newQty }
+            : item
+        )
+      );
+    }
+  }
+
+  function handleRemoveClick(mob) {
+    const id = mob.mob.id || mob.mob.identifier;
+    const name = mob.mob.name || '';
+    setMobToRemoveId(id);
+    setMobToRemoveName(name);
+    setShowConfirmModal(true);
+  }
+
+  function confirmRemove() {
+    if (!mobToRemoveId) return;
+    // Aquí usamos updateQty para eliminar (qty = 0)
+    updateQty(mobToRemoveId, 0);
+    setShowConfirmModal(false);
+    setMobToRemoveId(null);
+    setMobToRemoveName('');
+    // También actualizar localmente items
+    setItems(prev => prev.filter(item => (item.mob.id || item.mob.identifier) !== mobToRemoveId));
+  }
+
+  function cancelRemove() {
+    setShowConfirmModal(false);
+    setMobToRemoveId(null);
+    setMobToRemoveName('');
+  }
 
   if (entries.length === 0) {
     return (
       <Container className="py-5">
-        <Alert variant="info m-0">Tu carrito está vacío.</Alert>
+        <Alert variant="info">Tu carrito está vacío.</Alert>
       </Container>
     );
   }
-
   if (loading) {
     return (
       <div className="text-center py-5 m-5">
@@ -104,43 +111,107 @@ export default function Carrito() {
       </div>
     );
   }
-
   if (error) {
     return <Alert variant="danger">{error}</Alert>;
   }
 
   return (
-    <Container className="py-4">
-      <Row xs={1} sm={2} md={3} lg={4} className="g-4">
-        {items.map(({ data: mob, qty }) => {
-          const key = normalizeId(mob.identifier);
-          const src = localMobImages[key] || mob.render_image || mob.head_image || '';
+    <>
+      <Container className="py-4">
+        <Row xs={1} sm={2} md={3} lg={4} className="g-4">
+          {items.map(({ mob, qty }) => {
+            const key = normalizeId(mob.identifier);
+            const src = localMobImages[key] || mob.render_image || mob.head_image || '';
+            const mobId = mob.id || mob.identifier;
 
-          return (
-            <Col key={mob.identifier}>
-              <Card className="h-100">
-                <Card.Img
-                  variant="top"
-                  src={src}
-                  alt={mob.name}
-                  style={{ objectFit: 'contain', height: '150px' }}
-                />
-                <Card.Body>
-                  <Card.Title>{mob.name}</Card.Title>
-                  <div><strong>Cantidad:</strong> {qty}</div>
-                </Card.Body>
-              </Card>
-            </Col>
-          );
-        })}
-      </Row>
+            return (
+              <Col key={mobId}>
+                <Card className="h-100">
+                  <Card.Img
+                    variant="top"
+                    src={src}
+                    alt={mob.name}
+                    style={{ objectFit: 'contain', height: '150px' }}
+                  />
+                  <Card.Body>
+                    <Card.Title>{mob.name}</Card.Title>
+                    <InputGroup className="mb-3" style={{ maxWidth: '180px' }}>
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => handleUpdateQty(mobId, qty - 1)}
+                        disabled={qty <= 1}
+                      >
+                        -
+                      </Button>
+                      <FormControl
+                        type="number"
+                        value={qty}
+                        min={1}
+                        onChange={e => {
+                          const val = Number(e.target.value);
+                          if (isNaN(val) || val < 1) return;
+                          handleUpdateQty(mobId, val);
+                        }}
+                        aria-label={`Cantidad de ${mob.name}`}
+                        style={{ maxWidth: '40px', textAlign: 'center' }}
+                      />
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => handleUpdateQty(mobId, qty + 1)}
+                      >
+                        +
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={() => handleRemoveClick({ mob, qty })}
+                        style={{
+                          marginLeft: '4px',
+                          padding: '0 8px',
+                          minWidth: '70px',
+                          fontSize: '0.8rem',
+                          height: '38px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        Eliminar
+                      </Button>
+                    </InputGroup>
+                  </Card.Body>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
 
-      {/* Botón para vaciar el carrito */}
-      <div className="mt-3 text-center">
-        <Button variant="danger" onClick={clearCart}>
-          Vaciar Carrito
-        </Button>
-      </div>
-    </Container>
+        <div className="mt-3 text-center">
+          <Button variant="danger" onClick={clearCart}>
+            Vaciar Carrito
+          </Button>
+        </div>
+      </Container>
+
+      <Modal show={showConfirmModal} onHide={cancelRemove} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {mobToRemoveName && (
+            <p>
+              ¿Seguro que quieres eliminar <strong>{mobToRemoveName}</strong> de tu carrito?
+            </p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={cancelRemove}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={confirmRemove}>
+            Eliminar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 }

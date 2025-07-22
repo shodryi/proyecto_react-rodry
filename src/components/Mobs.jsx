@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Spinner, Alert, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Alert, Button, Pagination, Modal, FormControl } from 'react-bootstrap';
 import swal from 'sweetalert';
 import { useCart } from '../components/CarritoContext';
 
@@ -24,28 +24,11 @@ import witchImg from '../assets/mobs/witch.webp';
 import zoglinImg from '../assets/mobs/zoglin.webp';
 import zombie_villagerImg from '../assets/mobs/zombie_villager.webp';
 
-// Normalizar ID's
+// Normalizar ID's para mapear imágenes locales
 function normalizeId(id) {
   if (!id) return '';
-
-  return id
-    .toLowerCase()
-    .split(':')
-    .pop()
-    .replace(/[\s-]/g, '_');
+  return id.toLowerCase().split(':').pop().replace(/[-\s]/g, '_');
 }
-
-const ALL_MOBS = [
-  'allay', 'axolotl', 'bat', 'camel', 'cat', 'chicken', 'cod', 'cow', 'donkey', 'frog', 'glow_squid',
-  'horse', 'mooshroom', 'mule', 'ocelot', 'parrot', 'pig', 'pufferfish', 'rabbit', 'salmon', 'sheep',
-  'skeleton_horse', 'sniffer', 'snow_golem', 'squid', 'strider', 'tadpole', 'tropical_fish', 'turtle',
-  'villager', 'wandering_trader', 'bee', 'cave_spider', 'dolphin', 'drowned', 'enderman', 'fox', 'goat',
-  'iron_golem', 'llama', 'panda', 'piglin', 'polar_bear', 'spider', 'trader_llama', 'wolf', 'zombified_piglin',
-  'blaze', 'creeper', 'elder_guardian', 'endermite', 'evoker', 'ghast', 'guardian', 'hoglin', 'husk',
-  'magma_cube', 'phantom', 'piglin_brute', 'pillager', 'ravager', 'shulker', 'silverfish', 'skeleton', 'slime',
-  'stray', 'vex', 'vindicator', 'warden', 'witch', 'wither_skeleton', 'zoglin', 'zombie', 'zombie_villager',
-  'ender_dragon', 'wither', 'armadillo', 'breeze'
-];
 
 const localMobImages = {
   breeze: breezeImg,
@@ -71,27 +54,25 @@ const localMobImages = {
 };
 
 export default function Mobs() {
+  const [searchTerm, setSearchTerm] = useState('');
   const [mobs, setMobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // obtenemos la función de añadir al carrito
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedMob, setSelectedMob] = useState(null);
+  const MOBS_PER_PAGE = 16;
   const { addToCart } = useCart();
 
   useEffect(() => {
     async function fetchMobs() {
       try {
-        const data = await Promise.all(
-          ALL_MOBS.map(name =>
-            fetch(`/api/mob/${name}`)
-              .then(res => {
-                if (!res.ok) throw new Error(`No encontrado: ${name}`);
-                return res.json();
-              })
-              .then(json => json.data)
-          )
-        );
-        setMobs(data);
+        const res = await fetch('/api/mobs');
+        if (!res.ok) throw new Error('Error al solicitar la lista de mobs');
+        const json = await res.json();
+        const all = json.data || json;
+        // Ya no filtramos, mostramos todos los mobs
+        setMobs(all);
       } catch (err) {
         console.error(err);
         setError('Error al cargar los mobs.');
@@ -99,7 +80,6 @@ export default function Mobs() {
         setLoading(false);
       }
     }
-
     fetchMobs();
   }, []);
 
@@ -115,16 +95,42 @@ export default function Mobs() {
     return <Alert variant="danger">{error}</Alert>;
   }
 
+  // Filtrar según búsqueda
+  const filtered = mobs.filter(mob =>
+    mob.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filtered.length / MOBS_PER_PAGE);
+  const startIndex = (currentPage - 1) * MOBS_PER_PAGE;
+  const pageMobs = filtered.slice(startIndex, startIndex + MOBS_PER_PAGE);
+
+  const handleOpenModal = mob => {
+    setSelectedMob(mob);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedMob(null);
+  };
+
   return (
     <Container className="py-4">
-      <Row xs={1} sm={2} md={3} lg={4} className="g-4">
-        {mobs.map(mob => {
-          const key = normalizeId(mob.identifier);
-          const src =
-            localMobImages[key] || mob.render_image || mob.head_image || '';
+      {/* Buscador */}
+      <FormControl
+        type="text"
+        placeholder="Buscar mobs..."
+        className="mb-4"
+        value={searchTerm}
+        onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+      />
 
+      <Row xs={1} sm={2} md={3} lg={4} className="g-4">
+        {pageMobs.map(mob => {
+          const key = normalizeId(mob.identifier);
+          const src = localMobImages[key] || mob.render_image || mob.head_image || '';
           return (
-            <Col key={mob.identifier}>
+            <Col key={mob.id || mob.identifier}>
               <Card className="h-100 mob-card">
                 <Card.Img
                   variant="top"
@@ -132,58 +138,116 @@ export default function Mobs() {
                   alt={mob.name}
                   style={{ objectFit: 'contain', height: '150px' }}
                 />
-
                 <Card.Body>
-                    <Card.Title>{mob.name}</Card.Title>
-
-                    <div className="d-flex justify-content-between align-items-start mb-3">
-                      <div>
-                        <div><strong>Vida:</strong> {mob.health}</div>
-                        <div><strong>Dimensiones:</strong> {mob.width}×{mob.height}</div>
-                      </div>
-
-                      <Button variant="success"size="sm"className="p-1"style={{ minWidth: 'auto'}}>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="40"
-                          height="40"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.75"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M12 9h.01" />
-                          <path d="M11 12h1v4h1" />
-                        </svg>
-                      </Button>
+                  <Card.Title>{mob.name}</Card.Title>
+                  <div className="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                      <div><strong>Vida:</strong> {mob.health}</div>
+                      <div><strong>Dimensiones:</strong> {mob.width}×{mob.height}</div>
                     </div>
-
                     <Button
                       variant="success"
-                      className="w-100"
-                      onClick={() => {
-                        addToCart(mob.identifier);
-
-                        // Muestro el SweetAlert
-                        swal({
-                          title: '¡Hecho!',
-                          text: `${mob.name} añadido al carrito correctamente.`,
-                          icon: 'success',
-                          button: 'Genial'
-                        });
-                      }}
+                      size="sm"
+                      className="p-1"
+                      style={{ minWidth: 'auto' }}
+                      onClick={() => handleOpenModal(mob)}
+                      aria-label={`Info de ${mob.name}`}
                     >
-                      Agregar al carrito
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="40"
+                        height="40"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 9h.01" />
+                        <path d="M11 12h1v4h1" />
+                      </svg>
                     </Button>
+                  </div>
+                  <Button
+                    variant="success"
+                    className="w-100"
+                    onClick={() => {
+                      addToCart(mob.id || mob.identifier);
+                      swal({ title: '¡Hecho!', text: `${mob.name} añadido al carrito correctamente.`, icon: 'success', button: 'Genial' });
+                    }}
+                  >
+                    Agregar al carrito
+                  </Button>
                 </Card.Body>
-
               </Card>
             </Col>
           );
         })}
       </Row>
+
+      <Pagination className="justify-content-center mt-4">
+        <Pagination.Prev disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} />
+        {[...Array(totalPages)].map((_, idx) => (
+          <Pagination.Item
+            key={idx + 1}
+            active={idx + 1 === currentPage}
+            onClick={() => setCurrentPage(idx + 1)}
+          >
+            {idx + 1}
+          </Pagination.Item>
+        ))}
+        <Pagination.Next disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} />
+      </Pagination>
+
+      {/* Modal de información */}
+      <Modal show={showModal} onHide={handleCloseModal} centered size="lg">
+        {selectedMob && (
+          <>
+            <Modal.Header closeButton>
+              <Modal.Title>{selectedMob.name}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Row>
+                <Col md={6} className="d-flex flex-column align-items-center justify-content-center">
+                  <img
+                    src={selectedMob.render_image || localMobImages[normalizeId(selectedMob.identifier)] || selectedMob.head_image}
+                    alt={selectedMob.name}
+                    style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }}
+                  />
+                </Col>
+                <Col md={6} className="d-flex flex-column align-items-center justify-content-center">
+                  <img
+                    src={selectedMob.head_image || localMobImages[normalizeId(selectedMob.identifier)]}
+                    alt={`${selectedMob.name} head`}
+                    style={{ maxHeight: '150px', maxWidth: '150px', objectFit: 'contain', marginBottom: '1rem' }}
+                  />
+                  <div><strong>Nombre:</strong> {selectedMob.name}</div>
+                  <div><strong>Identificador:</strong> {selectedMob.identifier}</div>
+                  <div><strong>ID:</strong> {selectedMob.id}</div>
+                  <div><strong>Vida:</strong> {selectedMob.health}</div>
+                  <div><strong>Ancho:</strong> {selectedMob.width}</div>
+                  <div><strong>Alto:</strong> {selectedMob.height}</div>
+                  <div><strong>Version ID:</strong> {selectedMob.version_id ?? 'N/A'}</div>
+                </Col>
+              </Row>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="success"
+                onClick={() => {
+                  addToCart(selectedMob.id || selectedMob.identifier);
+                  swal({ title: '¡Hecho!', text: `${selectedMob.name} añadido al carrito correctamente.`, icon: 'success', button: 'Genial' });
+                  handleCloseModal();
+                }}
+              >
+                Agregar al carrito
+              </Button>
+              <Button variant="secondary" onClick={handleCloseModal}>Cerrar</Button>
+            </Modal.Footer>
+          </>
+        )}
+      </Modal>
     </Container>
   );
 }

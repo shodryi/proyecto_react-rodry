@@ -22,7 +22,6 @@ export default function Header(){
           <Nav className="me-auto">
             <Nav.Link className="text-light" as={Link} to="/">Inicio</Nav.Link>
             <Nav.Link className="text-light" as={Link} to="/nosotros">Nosotros</Nav.Link>
-            <Nav.Link className="text-light" as={Link} to="/contacto">Contacto</Nav.Link>
             {isAuth && (
               <>
                 <Nav.Link className="text-light" as={Link} to="/perfil/usuario123">Perfil</Nav.Link>
@@ -34,8 +33,7 @@ export default function Header(){
           <Nav className="align-items-center">
             {/* Carrito */}
             <Nav.Link as={Link} to="/carrito" className="text-light px-3">
-             
-                <svg
+                              <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="40"
                 height="40"
@@ -51,8 +49,6 @@ export default function Header(){
                 <path d="M17 17h-11v-14h-2" />
                 <path d="M6 5l14 1l-1 7h-13" />
                 </svg>
-
-
             </Nav.Link>
 
             {/* Login / Logout */}
