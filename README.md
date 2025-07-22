@@ -70,5 +70,6 @@ Pequeña tienda de “mobs” de Minecraft con búsqueda, paginación, carrito y
 ### 🌐 Deploy en Netlify
 
 LINK: https://minecraftmob.netlify.app
+
 El sitio ya está desplegado desde `main`.
 Netlify gestiona `VITE_API_BASE_URL` y hace redirecciones automáticas a MockAPI.
